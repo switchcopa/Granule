@@ -25,9 +25,15 @@ void engine_run(Engine *engine) {
 			switch (event.type) {
 				case SDL_QUIT:
 					engine->running = 0;
-					break;	
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					if (event.button.button == SDL_BUTTON_LEFT) {
+						//
+					} 
+
+					break;
 			}
-	
+			
 		world_update(&world, DT);
 
 		renderer_begin();
