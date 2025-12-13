@@ -1,0 +1,12 @@
+/src/build/
+*.o
+*.exe
+*.out
+
+*.swp
+*.swo
+*.DS_Store
+.vscode/
+*.iml
+
+*.log
