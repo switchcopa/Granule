@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags: C11, optimization, warnings, SDL2 includes
-CFLAGS = -std=c11 -O2 -Wall -Wextra `sdl2-config --cflags`
+CFLAGS = -g -std=c11 -O2 -Wall -Wextra `sdl2-config --cflags`
 LDFLAGS = `sdl2-config --libs`
 
 # Build folder

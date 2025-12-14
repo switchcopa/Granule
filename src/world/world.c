@@ -8,6 +8,7 @@ int world_init(World *world) {
 	world->num_of_objects = 0;
 	world->platform_height = WINDOW_HEIGHT - 200;
 	world->width = WINDOW_WIDTH, world->height = world->platform_height;
+	world->sand_speed = 20.0f;
 	world->grid = malloc(sizeof(CellType *) * world->height);
         if (world->grid == NULL)
                 return 0;
@@ -20,8 +21,8 @@ int world_init(World *world) {
 			world->grid[i][j] = EMPTY;
 	}
         
-        return 1;
 	// initialize more here later
+        return 1;
 }
 
 void world_update(World *world, float dt) {
@@ -44,7 +45,6 @@ void world_update(World *world, float dt) {
 						}
 					}
 			}
-
 	// do more later	
 }
 
