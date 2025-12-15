@@ -105,7 +105,22 @@ static void generate_entities(World *world, CellType entity_type, int x, int y) 
 }
 
 static void summon_entity(World *world, CellType entity_type, int i, int j) {
+	CellColor *clr;
+	switch (entity_type) {
+		case SAND:
+			clr = (CellColor *) sand_colors;
+			break;
+		case WATER:
+                        world->grid[i][j].color = water_color;
+	                world->grid[i][j].type = entity_type;
+                        return;
+		case WET_SAND:
+			break;
+                default:
+                        return;
+	}
+
 	int choice = rand() % 3;
-        world->grid[i][j].color = sand_colors[choice];
+        world->grid[i][j].color = clr[choice];
 	world->grid[i][j].type = entity_type;
 }
