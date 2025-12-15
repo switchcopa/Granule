@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	}
 
 	engine_run(&engine);	
-	engine_shutdown(&engine);
+	engine_shutdown();
 	
 	return EXIT_SUCCESS;
 }

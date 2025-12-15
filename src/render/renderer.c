@@ -4,11 +4,10 @@
 #include "renderer.h"
 #include "../world/world.h"
 
-static CellColor get_grid_color(World *world, int i, int j);
+static ColorType get_grid_color(World *world, int i, int j);
 
 SDL_Window *window;
 SDL_Renderer *renderer;
-
 
 int renderer_init(void) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -21,6 +20,7 @@ int renderer_init(void) {
 	);
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_ShowCursor(SDL_DISABLE);
         return 1;
 }
 
@@ -36,10 +36,16 @@ void renderer_draw(World *world) {
 				case NONE:
 					break;
 				case YELLOW:
-					SDL_Rect sand = {j, i, SAND_SIZE, SAND_SIZE};
+					SDL_Rect sand = {j * BLOCK_SIZE, i * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
 					SDL_RenderFillRect(renderer, &sand);
 					break;
 				case BLUE:
+					SDL_Rect water = {j * BLOCK_SIZE, i * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
+					SDL_RenderFillRect(renderer, &water);
+					break;
+				case BROWNISH_YELLOW:
+					SDL_Rect wet_sand = {j * BLOCK_SIZE, i * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
+					SDL_RenderFillRect(renderer, &wet_sand);
 					break;
 			}
 		} 
@@ -55,12 +61,29 @@ void renderer_shutdown(void) {
 	SDL_Quit();
 }
 
-static CellColor get_grid_color(World *world, int i, int j) {
+void renderer_draw_cursor(World *world, int mx, int my) {
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+	SDL_Rect cursor = {mx, my, BLOCK_SIZE * world->generation_size, BLOCK_SIZE * world->generation_size};
+	SDL_RenderDrawRect(renderer, &cursor);
+}
+
+static ColorType get_grid_color(World *world, int i, int j) {
 	switch (world->grid[i][j]) {
 		case EMPTY:
 			return NONE;
 		case SAND:
-			SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+			SDL_SetRenderDrawColor(renderer, world->color_buffer[i][j].r, 
+                                world->color_buffer[i][j].g, world->color_buffer[i][j].b, 255);
 			return YELLOW;
+		case WET_SAND:
+			SDL_SetRenderDrawColor(renderer, world->color_buffer[i][j].r, 
+                                world->color_buffer[i][j].g, world->color_buffer[i][j].b, 255);
+			return BROWNISH_YELLOW;
+		case WATER:
+			SDL_SetRenderDrawColor(renderer, world->color_buffer[i][j].r, 
+                                world->color_buffer[i][j].g, world->color_buffer[i][j].b, 255);
+			return BLUE;
+		default:
+			return NONE;
 	}
 }

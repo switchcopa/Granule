@@ -5,7 +5,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#define SAND_SIZE 4
+#define BLOCK_SIZE 8
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
@@ -15,12 +15,14 @@
 typedef enum {
 	NONE,
 	YELLOW,
-	BLUE
-} CellColor;
+	BLUE,
+	BROWNISH_YELLOW,
+} ColorType;
 
 int renderer_init(void);
 void renderer_begin(void);
 void renderer_draw(World *world);
+void renderer_draw_cursor(World *world, int mx, int my);
 void renderer_end(void);
 void renderer_shutdown(void);
 

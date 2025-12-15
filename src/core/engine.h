@@ -1,4 +1,7 @@
 // engine.h
+
+#include "../world/world.h"
+
 #ifndef ENGINE_H
 #define ENGINE_H
 
@@ -7,11 +10,12 @@
 #define DT (1.0f / TARGET_FPS)
 
 typedef struct {
+	CellType entity_summon_type;
 	int running;
 } Engine;
 
 int 	engine_init(Engine *engine);
 void 	engine_run(Engine *engine);
-void 	engine_shutdown(Engine *engine);
+void 	engine_shutdown(void);
 
 #endif
