@@ -3,11 +3,12 @@
 #include <SDL2/SDL_render.h>
 #include "renderer.h"
 #include "../world/world.h"
-
-static ColorType get_grid_color(World *world, int i, int j);
+#include "../../include/shared/colors.h"
 
 SDL_Window *window;
 SDL_Renderer *renderer;
+
+static void set_cell_color(World *world, int i, int j);
 
 int renderer_init(void) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -32,24 +33,11 @@ void renderer_begin(void) {
 void renderer_draw(World *world) {
 	for (int i = 0; i < world->height; i++)
 		for (int j = 0; j < world->width; j++) {
-			switch (get_grid_color(world, i, j)) {
-				case NONE:
-					break;
-				case YELLOW:
-					SDL_Rect sand = {j * BLOCK_SIZE, i * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
-					SDL_RenderFillRect(renderer, &sand);
-					break;
-				case BLUE:
-					SDL_Rect water = {j * BLOCK_SIZE, i * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
-					SDL_RenderFillRect(renderer, &water);
-					break;
-				case BROWNISH_YELLOW:
-					SDL_Rect wet_sand = {j * BLOCK_SIZE, i * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
-					SDL_RenderFillRect(renderer, &wet_sand);
-					break;
-			}
-		} 
-}
+                        set_cell_color(world, i, j);
+                        SDL_Rect block = {j*BLOCK_SIZE, i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
+                        SDL_RenderFillRect(renderer, &block);
+		}
+} 
 
 void renderer_end(void) {
 	SDL_RenderPresent(renderer);
@@ -67,23 +55,10 @@ void renderer_draw_cursor(World *world, int mx, int my) {
 	SDL_RenderDrawRect(renderer, &cursor);
 }
 
-static ColorType get_grid_color(World *world, int i, int j) {
-	switch (world->grid[i][j]) {
-		case EMPTY:
-			return NONE;
-		case SAND:
-			SDL_SetRenderDrawColor(renderer, world->color_buffer[i][j].r, 
-                                world->color_buffer[i][j].g, world->color_buffer[i][j].b, 255);
-			return YELLOW;
-		case WET_SAND:
-			SDL_SetRenderDrawColor(renderer, world->color_buffer[i][j].r, 
-                                world->color_buffer[i][j].g, world->color_buffer[i][j].b, 255);
-			return BROWNISH_YELLOW;
-		case WATER:
-			SDL_SetRenderDrawColor(renderer, world->color_buffer[i][j].r, 
-                                world->color_buffer[i][j].g, world->color_buffer[i][j].b, 255);
-			return BLUE;
-		default:
-			return NONE;
-	}
+static void set_cell_color(World *world, int i, int j) { 
+        uint8_t r = world->grid[i][j].color.r;
+        uint8_t g = world->grid[i][j].color.g;
+        uint8_t b = world->grid[i][j].color.b;
+
+        SDL_SetRenderDrawColor(renderer, r, g, b, 255);
 }

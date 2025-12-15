@@ -4,28 +4,15 @@
 #include "engine.h"
 #include <stdlib.h>
 #include <stdio.h> 
+#include "../../include/shared/colors.h"
 #include <time.h>
 #include "../render/renderer.h"
 #include "../world/world.h"
 
-static void generate_entity(World *world, CellType entity_type, int x, int y);
-static void assign_rand_color(World *world, CellType entity_type, int i, int j);
+static void generate_entities(World *world, CellType entity_type, int x, int y);
+static void summon_entity(World *world, CellType entity_type, int i, int j);
 
 World world;
-
-CellColor sand_colors[3] = {
-    {228, 210, 150}, // light warm sand
-    {220, 200, 135}, // slightly darker sand
-    {235, 218, 165}  // soft yellow sand
-};
-
-CellColor wet_sand_colors[3] = {
-    {185, 160, 95},  // darker brownish-yellow
-    {170, 145, 85},  // muted wet sand
-    {155, 130, 70}   // deep wet sand tone
-};
-
-CellColor water_color = {0, 105, 180};
 
 int engine_init(Engine *engine) {
 	engine->running = 0;
@@ -80,7 +67,7 @@ void engine_run(Engine *engine) {
 		
 		if (is_holding_mouse) {
 			SDL_GetMouseState(&mx, &my);
-			generate_entity(&world, engine->entity_summon_type,mx, my);
+			generate_entities(&world, engine->entity_summon_type, mx, my);
 		}
 
 		world_update(&world, 1.0/TARGET_FPS);
@@ -103,41 +90,22 @@ void engine_shutdown(void) {
 	renderer_shutdown();
 }
 
-static void generate_entity(World *world, CellType entity_type, int x, int y) {
+static void generate_entities(World *world, CellType entity_type, int x, int y) {
 	int grid_x = x / BLOCK_SIZE;
 	int grid_y = y / BLOCK_SIZE;
 
-	for (int i = grid_x; i >= 0 && i < grid_x + world->generation_size && i < world->width; i++) {
-		for (int j = grid_y; j >= 0 && j < grid_y + world->generation_size && j < world->height; j++) {
-			if (world->grid[j][i] != EMPTY)
+	for (int i = grid_x; i >= 0 && i < grid_x + world->generation_size && i < world->height; i++) {
+		for (int j = grid_y; j >= 0 && j < grid_y + world->generation_size && j < world->width; j++) {
+			if (world->grid[i][j].type != EMPTY)
 				continue;
-			world->grid[j][i] = entity_type;
-                        assign_rand_color(world, entity_type, i, j);
+			summon_entity(world, entity_type, i, j);
 			world->num_of_objects++;
 		}
 	}
 }
 
-static void assign_rand_color(World *world, CellType entity_type, int i, int j) {
-        int choice = rand() % 3;
-        CellColor *colors;
-        switch (entity_type) {
-                case SAND:
-                        colors = sand_colors;
-                        break;
-                case WET_SAND:
-                        colors = wet_sand_colors;
-                        break;
-                case WATER:
-                        world->color_buffer[j][i].r = 0;
-                        world->color_buffer[j][i].g = 105;
-                        world->color_buffer[j][i].b = 180;
-			return;
-                default:
-                        break;
-        }
-
-        world->color_buffer[j][i].r = (uint8_t) colors[choice].r;
-        world->color_buffer[j][i].g = (uint8_t) colors[choice].g;
-        world->color_buffer[j][i].b = (uint8_t) colors[choice].b;
+static void summon_entity(World *world, CellType entity_type, int i, int j) {
+	int choice = rand() % 3;
+        world->grid[i][j].color = sand_colors[choice];
+	world->grid[i][j].type = entity_type;
 }

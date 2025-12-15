@@ -12,13 +12,6 @@
 #define TARGET_FPS 60
 #define FRAME_TIME (1000 / TARGET_FPS)
 
-typedef enum {
-	NONE,
-	YELLOW,
-	BLUE,
-	BROWNISH_YELLOW,
-} ColorType;
-
 int renderer_init(void);
 void renderer_begin(void);
 void renderer_draw(World *world);

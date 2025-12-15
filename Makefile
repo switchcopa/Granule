@@ -13,14 +13,16 @@ SRC_ENGINE = src/core/engine.c
 SRC_RENDERER = src/render/renderer.c
 SRC_WORLD = src/world/world.c
 SRC_MAIN = src/main.c
+SRC_SHARED_COLORS = src/shared/colors.c
 
 # Object files
 OBJ_ENGINE = $(BUILD_DIR)/engine.o
 OBJ_RENDERER = $(BUILD_DIR)/renderer.o
 OBJ_WORLD = $(BUILD_DIR)/world.o
 OBJ_MAIN = $(BUILD_DIR)/main.o
+OBJ_SHARED_COLORS = $(BUILD_DIR)/colors.o
 
-OBJ = $(OBJ_ENGINE) $(OBJ_RENDERER) $(OBJ_WORLD) $(OBJ_MAIN)
+OBJ = $(OBJ_ENGINE) $(OBJ_RENDERER) $(OBJ_WORLD) $(OBJ_MAIN) $(OBJ_SHARED_COLORS)
 
 # Target binary
 TARGET = $(BUILD_DIR)/granule
@@ -48,6 +50,10 @@ $(OBJ_WORLD): $(SRC_WORLD)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_MAIN): $(SRC_MAIN)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_SHARED_COLORS): $(SRC_SHARED_COLORS)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

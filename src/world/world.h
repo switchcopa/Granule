@@ -1,6 +1,7 @@
 // world.h
 
 #include <stdint.h>
+#include "../../include/shared/colors.h"
 
 #ifndef WORLD_H
 #define WORLD_H
@@ -16,14 +17,12 @@ typedef enum {
 } CellType;
 
 typedef struct {
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-} CellColor;
+	CellType type;
+	CellColor color;
+} Cell;
 
 typedef struct {
-	CellType **grid;
-	CellColor **color_buffer;
+	Cell **grid;
 	int width, height;
 	int num_of_objects;
 	int platform_height;
