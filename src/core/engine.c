@@ -94,12 +94,12 @@ static void generate_entities(World *world, CellType entity_type, int x, int y) 
 	int grid_x = x / BLOCK_SIZE;
 	int grid_y = y / BLOCK_SIZE;
 
-	for (int i = grid_x; i >= 0 && i < grid_x + world->generation_size && i < world->height; i++) {
-		for (int j = grid_y; j >= 0 && j < grid_y + world->generation_size && j < world->width; j++) {
-			if (world->grid[i][j].type != EMPTY)
-				continue;
-			summon_entity(world, entity_type, i, j);
-			world->num_of_objects++;
+	for (int i = grid_y; i < grid_y + world->generation_size && i < world->height; i++) {
+		for (int j = grid_x; j < grid_x + world->generation_size && j < world->width; j++) {
+			if (i >= 0 && j >= 0 && world->grid[i][j].type == EMPTY) {
+				summon_entity(world, entity_type, i, j);
+				world->num_of_objects++;
+			}
 		}
 	}
 }
