@@ -1,0 +1,19 @@
+1///
+add wetsand. 
+water touches sand -> wet sand 
+water below wet sand -> wet sand falls slowly.
+
+2///
+add temperature field in Cell struct
+
+3///
+add drying system for wet sand
+
+4///
+add density for each Cell
+
+5///
+add status field for each Cell
+
+6///
+add generic timer
