@@ -5,11 +5,19 @@
 #include "../../include/shared/colors.h"
 #include "world.h"
 
-static void water_update(World *world, int i, int j);
 static void sand_update(World *world, int i, int j);
-static void sand_water_collide(World *world, int i, int j);
+
+static void water_update(World *world, int i, int j);
+
 static void wetsand_update(World *world, int i, int j);
+
+static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2);
+
 static void swap_cells(World *world, int i_1, int j_1, int i_2, int j_2);
+
+static void init_cell(World *cell);
+
+static void inc_timer(Cell *cell);
 
 int world_init(World *world) {
 	world->num_of_objects = 0;
@@ -29,10 +37,8 @@ int world_init(World *world) {
 			return 0;
 		}
 		
-		for (int j = 0; j < world->width; j++) {
-			world->grid[i][j].type = EMPTY;
-			world->grid[i][j].color = (CellColor) {0, 0, 0};
-		}
+		for (int j = 0; j < world->width; j++)
+			init_cell(&world->grid[i][j]);
 	}
 
         return 1;
@@ -51,6 +57,7 @@ void world_update(World *world, float dt) {
 					water_update(world, i, j);
 					break;
 				case WET_SAND:
+					wetsand_update(world, i, j);
 					break;
 				default:
 					break;
@@ -66,13 +73,14 @@ void world_destroy(World *world) {
 
 static void sand_update(World *world, int i, int j) {
 	if (i < world->height - 1 && world->grid[i+1][j].type == EMPTY) {
-		swap_cells(world, i, j, i+1, j);	
+		swap_cells(world, i, j, i+1, j);
 	} else if (i < world->height - 1 && world->grid[i+1][j].type != EMPTY) {
-		if (j > 0 && world->grid[i+1][j-1].type == EMPTY) {
+		if (j > 0 && world->grid[i+1][j-1].type == EMPTY)
 			swap_cells(world, i, j, i+1, j-1);	
-		} else if (j < world->width - 1 && world->grid[i+1][j+1].type == EMPTY) {
+		else if (j < world->width - 1 && world->grid[i+1][j+1].type == EMPTY)
 			swap_cells(world, i, j, i+1, j+1);
-		}
+		else if (i < world->height - 1  && world->grid[i+1][j].type == WATER)
+			sand_water_collide(world, i, j, i+1, j);
 	}
 }
 
@@ -83,55 +91,49 @@ static void water_update(World *world, int i, int j) {
 	}
 
 	int decision = rand() % 2;
-	if (j > 0 && world->grid[i][j-1].type == EMPTY && decision == 0) {
+	if (j > 0 && world->grid[i][j-1].type == EMPTY && decision == 0)
 		swap_cells(world, i, j, i, j-1);
-	} else if (j < world->width - 1 && world->grid[i][j+1].type == EMPTY && decision == 1) {
+	else if (j < world->width - 1 && world->grid[i][j+1].type == EMPTY && decision == 1)
 		swap_cells(world, i, j, i, j+1);
-	}
+
+	
+	if (i < world->height - 1 && world->grid[i+1][j].type == SAND)
+		sand_water_collide(world, i, j, i+1, j);			
+	else if (j < world->width - 1 && world->grid[i][j+1].type == SAND)
+		sand_water_collide(world, i, j, i, j+1);			
+	else if (j > 0 && world->grid[i][j-1].type == SAND)
+		sand_water_collide(world, i, j, i, j-1);			
+	else if (i < world->height - 1 && j < world->width - 1 && world->grid[i+1][j+1].type == SAND)
+		sand_water_collide(world, i, j, i+1, j+1);			
+	else if (i < world->height - 1 && j > 0 && world->grid[i+1][j-1].type == SAND)
+		sand_water_collide(world, i, j, i+1, j-1);
 }
 
-/*
-static void sand_water_collide(World *world, int i, int j) {
-	if (i < world->height - 1 && j < world->width - 1) {
-		if (j > 0 && world->grid[i+1][j-1] == WATER) {
-			world->grid[i][j] = EMPTY;
-			world->grid[i+1][j-1] = WET_SAND;
-			change_cell_color(world, i, j, 255, 255, 255);
-			assign_rand_color(world, WET_SAND, i + 1, j-1);
-		} else if (world->grid[i+1][j] == WATER) {
-			world->grid[i][j] = EMPTY;
-			world->grid[i+1][j] = WET_SAND;
-			change_cell_color(world, i, j, 255, 255, 255);
-			assign_rand_color(world, WET_SAND, i + 1, j);
-		} else if (world->grid[i+1][j+1] == WATER) {
-			world->grid[i][j] = EMPTY;
-			world->grid[i+1][j+1] = WET_SAND;
-			change_cell_color(world, i, j, 255, 255, 255);
-			assign_rand_color(world, WET_SAND, i + 1, j+1);
-		}
-	}
+static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2) {
+	int choice = rand() % 3;
+	world->grid[i_1][j_1].type = EMPTY;
+	world->grid[i_1][j_1].color = (CellColor) {0, 0, 0};
+	world->grid[i_2][j_2].type = WET_SAND;
+	world->grid[i_2][j_2].color = wet_sand_colors[choice];
 }
 
 static void wetsand_update(World *world, int i, int j) {
 	int decision = rand() % 4;
 
-	if (i < world->height - 1 && j < world->width - 1) {
-		switch (world->grid[i+1][j]) {
+	if (i < world->height - 1) {
+		switch (world->grid[i+1][j].type) {
 			case EMPTY:
-				world->grid[i][j] = EMPTY;
-				world->grid[i+1][j] = WET_SAND;
+				swap_cells(world, i, j, i+1, j);
 				break;
 			case WATER:
 				if (decision != 1) break;
-				world->grid[i][j] = WATER;
-				world->grid[i+1][j] = WET_SAND;
+				swap_cells(world, i, j, i+1, j);
 				break;
 			default:
 				break;
 		}
 	}
 }
-*/
 
 static void swap_cells(World *world, int i_1, int j_1, int i_2, int j_2) {
 	CellType temp1 = world->grid[i_1][j_1].type;
@@ -141,4 +143,16 @@ static void swap_cells(World *world, int i_1, int j_1, int i_2, int j_2) {
 	CellColor temp2 = world->grid[i_1][j_1].color;
 	world->grid[i_1][j_1].color = world->grid[i_2][j_2].color;
 	world->grid[i_2][j_2].color = temp2;
+}
+
+static void init_cell(Cell *cell) {
+	*cell.type = EMPTY;
+	*cell.color = (CellColor) {0, 0, 0};			  
+	*cell.temperature = 20.0; 
+	*cell.timer = 0U;
+	*cell.state = NORMAL;
+}
+
+static void inc_timer(Cell *cell) {
+	*cell.timer++;
 }

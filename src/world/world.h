@@ -10,6 +10,12 @@
 #define MAX_GENERATION_SIZE 20
 
 typedef enum {
+	NORMAL,
+	BURNING,
+	FREEZING
+} CellState;
+
+typedef enum {
 	EMPTY,
 	SAND,
 	WATER,
@@ -19,6 +25,9 @@ typedef enum {
 typedef struct {
 	CellType type;
 	CellColor color;
+	CellState state;
+	float temperature;
+	uint16_t timer;
 } Cell;
 
 typedef struct {
