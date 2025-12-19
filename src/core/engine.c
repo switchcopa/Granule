@@ -12,13 +12,15 @@
 static void generate_entities(World *world, CellType entity_type, int x, int y);
 static void summon_entity(World *world, CellType entity_type, int i, int j);
 static void erase(World *world, int i, int j);
+static void clear_cell(Cell *cell);
+static void reset(World *world);
 
 World world;
 
 int engine_init(Engine *engine) {
 	engine->running = 0;
 	engine->entity_summon_type = SAND;
-	engine->mode = NORMAL;
+	engine->mode = NONE;
         srand(time(NULL));
 
 	world_init(&world);
@@ -62,14 +64,15 @@ void engine_run(Engine *engine) {
 							engine->entity_summon_type = WATER;
 						else  
 							engine->entity_summon_type = SAND;
-
-					} else if (event.key.keysym.sym == SDLK_d) {
-						if (engine->mode == NORMAL)
+					}
+					else if (event.key.keysym.sym == SDLK_d) {
+						if (engine->mode == NONE)
 							engine->mode = ERASE;
 						else
-							engine->mode = NORMAL;
+							engine->mode = NONE;
 					}
-
+					else if (event.key.keysym.sym == SDLK_r)
+						reset(&world);
 					break;
 			}
 		
@@ -142,11 +145,20 @@ static void erase(World *world, int x, int y) {
 
 	for (int i = grid_y; i < grid_y + world->generation_size && i < world->height; i++)
 		for (int j = grid_x; j < grid_x + world->generation_size && j < world->width; j++)
-			if (i >= 0 && j >= 0 && world->grid[i][j].type != EMPTY) {
-				world->grid[i][j].type = EMPTY;
-				world->grid[i][j].color = (CellColor) {0, 0, 0};
-				world->grid[i][j].state = NONE;
-				world->grid[i][j].temperature = 20.0f;
-				world->grid[i][j].timer = 0U;
-			}
+			if (i >= 0 && j >= 0 && world->grid[i][j].type != EMPTY)
+				clear_cell(&world->grid[i][j]);
+}
+
+static void reset(World *world) {
+	for (int i = 0; i < world->height; i++)
+		for (int j = 0; j < world->width; j++)
+			clear_cell(&world->grid[i][j]);
+}
+
+static void clear_cell(Cell *cell) {
+	cell->type = EMPTY;
+	cell->color = (CellColor) {0, 0, 0};
+	cell->state = NORMAL;
+	cell->temperature = 20.0f;
+	cell->timer = 0U;
 }
