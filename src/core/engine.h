@@ -9,8 +9,14 @@
 #define FRAME_TIME (1000 / TARGET_FPS)
 #define DT (1.0f / TARGET_FPS)
 
+typedef enum {
+	NONE,
+	ERASE,
+} Mode;
+
 typedef struct {
 	CellType entity_summon_type;
+	Mode mode;		
 	int running;
 } Engine;
 

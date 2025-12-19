@@ -11,12 +11,14 @@
 
 static void generate_entities(World *world, CellType entity_type, int x, int y);
 static void summon_entity(World *world, CellType entity_type, int i, int j);
+static void erase(World *world, int i, int j);
 
 World world;
 
 int engine_init(Engine *engine) {
 	engine->running = 0;
 	engine->entity_summon_type = SAND;
+	engine->mode = NORMAL;
         srand(time(NULL));
 
 	world_init(&world);
@@ -61,13 +63,22 @@ void engine_run(Engine *engine) {
 						else  
 							engine->entity_summon_type = SAND;
 
+					} else if (event.key.keysym.sym == SDLK_d) {
+						if (engine->mode == NORMAL)
+							engine->mode = ERASE;
+						else
+							engine->mode = NORMAL;
 					}
+
 					break;
 			}
 		
 		if (is_holding_mouse) {
 			SDL_GetMouseState(&mx, &my);
-			generate_entities(&world, engine->entity_summon_type, mx, my);
+			if (engine->mode == ERASE)
+				erase(&world, mx, my);
+			else
+				generate_entities(&world, engine->entity_summon_type, mx, my);
 		}
 
 		world_update(&world, 1.0/TARGET_FPS);
@@ -123,4 +134,19 @@ static void summon_entity(World *world, CellType entity_type, int i, int j) {
 	int choice = rand() % 3;
         world->grid[i][j].color = clr[choice];
 	world->grid[i][j].type = entity_type;
+}
+
+static void erase(World *world, int x, int y) {
+	int grid_x = x / BLOCK_SIZE;
+	int grid_y = y / BLOCK_SIZE;
+
+	for (int i = grid_y; i < grid_y + world->generation_size && i < world->height; i++)
+		for (int j = grid_x; j < grid_x + world->generation_size && j < world->width; j++)
+			if (i >= 0 && j >= 0 && world->grid[i][j].type != EMPTY) {
+				world->grid[i][j].type = EMPTY;
+				world->grid[i][j].color = (CellColor) {0, 0, 0};
+				world->grid[i][j].state = NONE;
+				world->grid[i][j].temperature = 20.0f;
+				world->grid[i][j].timer = 0U;
+			}
 }
