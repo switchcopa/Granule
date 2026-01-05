@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-#define FONT_SIZE 14
+#define FONT_SIZE 28 
 
 typedef struct {
 	TTF_Font *font;

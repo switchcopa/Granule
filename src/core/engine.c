@@ -9,19 +9,25 @@
 #include "../render/renderer.h"
 #include "../world/world.h"
 
-static void generate_entities(World *world, CellType entity_type, int x, int y);
-static void summon_entity(World *world, CellType entity_type, int i, int j);
-static void erase(World *world, int i, int j);
-static void clear_cell(Cell *cell);
-static void reset(World *world);
-static void get_cursor(Engine *engine);
+#define BUF_SIZE 24
+
+static void 	generate_entities(World *world, CellType entity_type, int x, int y);
+static void 	summon_entity(World *world, CellType entity_type, int i, int j);
+static void 	erase(World *world, int i, int j);
+static void 	clear_cell(Cell *cell);
+static void 	reset(World *world);
+static void 	get_cursor(Engine *engine);
 
 World world;
 
+extern const char *block_names[];
+const char *modes[MODES_N] = {"NONE", "ERASE"};
+
 int engine_init(Engine *engine) {
 	engine->running = 0;
-	engine->entity_summon_type = SAND;
+	engine->palette = SAND;
 	engine->mode = NONE;
+        engine->hovered_cell = NULL;
         srand(time(NULL));
 
 	world_init(&world);
@@ -36,6 +42,12 @@ void engine_run(Engine *engine) {
 	while (engine->running) {
 		Uint32 start_time = SDL_GetTicks();
 		get_cursor(engine);
+               	
+		int cx = engine->cursor_x / BLOCK_SIZE, cy = engine->cursor_y / BLOCK_SIZE; 
+                if (cx >= 0 && cx < world.width && cy >= 0 && cy < world.height)
+                        engine->hovered_cell = &world.grid[cy][cx];
+                else
+                        engine->hovered_cell = NULL;
 
 		while (SDL_PollEvent(&event)) 
 			switch (event.type) {
@@ -60,34 +72,51 @@ void engine_run(Engine *engine) {
 						world.generation_size -= 1;
 					break;
 				case SDL_KEYDOWN:
-					if (event.key.keysym.sym == SDLK_e) {
-						if (engine->entity_summon_type == SAND)
-							engine->entity_summon_type = WATER;
-						else  
-							engine->entity_summon_type = SAND;
-					}
+					if (event.key.keysym.sym == SDLK_e)
+						engine->palette = (CellType)(engine->palette + 1) % BLOCKS_N;
 					else if (event.key.keysym.sym == SDLK_d) {
-						if (engine->mode == NONE)
-							engine->mode = ERASE;
-						else
-							engine->mode = NONE;
+                                                engine->mode = (Mode)(engine->mode + 1) % MODES_N;
 					}
 					else if (event.key.keysym.sym == SDLK_r)
 						reset(&world);
 					break;
 			}
-		
+
+                         
+
 		if (is_holding_mouse) {
 			if (engine->mode == ERASE)
 				erase(&world, engine->cursor_x, engine->cursor_y);
 			else
-				generate_entities(&world, engine->entity_summon_type, engine->cursor_x, engine->cursor_y);
+				generate_entities(&world, engine->palette, engine->cursor_x, engine->cursor_y);
 		}
 
-		world_update(&world, 1.0/TARGET_FPS);
+		world_update(&world);
 
 		renderer_begin();
 		renderer_draw(&world);
+
+		char block_text[BUF_SIZE];
+		snprintf(block_text, sizeof(block_text), "Palette: %s", block_names[engine->palette]);
+		renderer_draw_text(block_text, 10, WINDOW_HEIGHT - 200);
+		
+		char mode_text[BUF_SIZE];
+		snprintf(mode_text, sizeof(mode_text), "Mode: %s", modes[engine->mode]);
+		renderer_draw_text(mode_text , WINDOW_WIDTH / 2 - 200, WINDOW_HEIGHT - 200);
+                
+                if (engine->hovered_cell) {
+                        char temperature_text[BUF_SIZE];
+			char type_text[BUF_SIZE];
+                        char timer_text[BUF_SIZE];
+                        snprintf(temperature_text, sizeof(temperature_text), "Temperature: %.1f", engine->hovered_cell->temperature);
+                        snprintf(type_text, sizeof(type_text), "Cell Type: %s", block_names[engine->hovered_cell->type]);
+                        snprintf(timer_text, sizeof(timer_text), "Ticks: %u", engine->hovered_cell->timer); 
+                        
+                        renderer_draw_text(temperature_text, WINDOW_WIDTH - 300, WINDOW_HEIGHT - 200);
+                        renderer_draw_text(type_text       , WINDOW_WIDTH - 300, WINDOW_HEIGHT - 175);
+                        renderer_draw_text(timer_text      , WINDOW_WIDTH - 300, WINDOW_HEIGHT - 150);
+                }
+
 		renderer_draw_cursor(&world, engine->cursor_x, engine->cursor_y);
 		renderer_end();	
 		
@@ -126,6 +155,7 @@ static void summon_entity(World *world, CellType entity_type, int i, int j) {
 	                world->grid[i][j].type = entity_type;
                         return;
 		case WET_SAND:
+			clr = (CellColor *) wet_sand_colors;
 			break;
                 default:
                         return;

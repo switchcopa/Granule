@@ -8,6 +8,7 @@
 
 #define CELL_SIZE 4
 #define MAX_GENERATION_SIZE 20
+#define BLOCKS_N 4
 
 typedef enum {
 	NORMAL,
@@ -39,7 +40,7 @@ typedef struct {
 } World;
 
 int world_init(World *world);
-void world_update(World *world, float dt);
+void world_update(World *world);
 void world_destroy(World *world);
 
 #endif 

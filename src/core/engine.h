@@ -8,6 +8,7 @@
 #define TARGET_FPS 60
 #define FRAME_TIME (1000 / TARGET_FPS)
 #define DT (1.0f / TARGET_FPS)
+#define MODES_N 2
 
 typedef enum {
 	NONE,
@@ -15,8 +16,9 @@ typedef enum {
 } Mode;
 
 typedef struct {
-	CellType entity_summon_type;
-	Mode mode;		
+        Cell *hovered_cell;
+	CellType palette;
+	Mode mode;
 	int running;
 	int cursor_x, cursor_y;
 } Engine;

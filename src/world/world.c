@@ -1,9 +1,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
-#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_render.h> 
 #include "../render/renderer.h"
 #include "../../include/shared/colors.h"
 #include "world.h"
+#include <stdint.h>
 
 static void sand_update(World *world, int i, int j);
 
@@ -18,6 +19,8 @@ static void swap_cells(Cell *cell1, Cell *cell2);
 static void init_cell(Cell *cell);
 
 static void inc_timer(Cell *cell);
+
+const char *block_names[BLOCKS_N] = {"NONE", "SAND", "WATER", "WET_SAND"};
 
 int world_init(World *world) {
 	world->num_of_objects = 0;
@@ -44,19 +47,22 @@ int world_init(World *world) {
         return 1;
 }
 
-void world_update(World *world, float dt) {
+void world_update(World *world) {
 	for (int i = world->height - 1; i >= 0; i--)
 		for (int j = 0; j < world->width; j++)
 			switch (world->grid[i][j].type) {
 				case EMPTY:
 					break;
 				case SAND:
+					inc_timer(&world->grid[i][j]);
 					sand_update(world, i, j);
 					break;
 				case WATER:
+					inc_timer(&world->grid[i][j]);
 					water_update(world, i, j);
 					break;
 				case WET_SAND:
+					inc_timer(&world->grid[i][j]);
 					wetsand_update(world, i, j);
 					break;
 				default:
@@ -115,6 +121,8 @@ static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2)
 	world->grid[i_1][j_1].color = (CellColor) {0, 0, 0};
 	world->grid[i_2][j_2].type = WET_SAND;
 	world->grid[i_2][j_2].color = wet_sand_colors[choice];
+	world->grid[i_2][j_2].timer = world->grid[i_1][j_1].timer;
+	world->grid[i_1][j_1].timer = 0U;
 }
 
 static void wetsand_update(World *world, int i, int j) {
@@ -143,14 +151,25 @@ static void wetsand_update(World *world, int i, int j) {
 }
 
 static void swap_cells(Cell *cell_1, Cell *cell_2) {
-	CellType temp1 = cell_1->type;
+	CellType type = cell_1->type;
 	cell_1->type = cell_2->type;
-	cell_2->type = temp1;
+	cell_2->type = type;
 
-
-	CellColor temp2 = cell_1->color;
+	CellColor color = cell_1->color;
 	cell_1->color = cell_2->color;
-	cell_2->color = temp2;
+	cell_2->color = color;
+
+	float temp = cell_1->temperature;
+	cell_1->temperature = cell_2->temperature;
+	cell_2->temperature = temp;
+
+	uint16_t timer = cell_1->timer;
+	cell_1->timer = cell_2->timer;
+	cell_2->timer = timer;
+
+	CellState state = cell_1->state;
+	cell_1->state = cell_2->state;
+	cell_2->state = state;
 }
 
 static void init_cell(Cell *cell) {

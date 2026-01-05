@@ -11,7 +11,7 @@ SDL_Window *window;
 SDL_Renderer *renderer;
 TextRenderer tr;
 
-const char *font_path = "../../assets/Pixelify_Sans/PixelifySans.ttf";
+const char *font_path = "assets/Pixelify_Sans/Pixelify_Sans.ttf";
 
 static void set_cell_color(World *world, int i, int j);
 
@@ -25,7 +25,11 @@ int renderer_init(void) {
 		SDL_WINDOW_SHOWN
 	);
 
-	text_renderer_init(&tr, font_path, FONT_SIZE);
+	if (text_renderer_init(&tr, font_path, FONT_SIZE) == 0) {
+		printf("error: failed to load font '%s\n", TTF_GetError());
+		return 0;
+	}
+
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_ShowCursor(SDL_DISABLE);
         return 1;
@@ -45,7 +49,7 @@ void renderer_draw(World *world) {
 		}
 } 
 
-void renderer_draw_text(World *world, const char *text, int w, int h) {
+void renderer_draw_text(const char *text, int w, int h) {
 	SDL_Texture *tex = text_render(&tr, renderer, text);
 	if (!tex) return;
 
