@@ -36,7 +36,6 @@ typedef struct {
 	int num_of_objects;
 	int platform_height;
 	uint8_t generation_size;
-	// more here later...
 } World;
 
 int world_init(World *world);

@@ -3,7 +3,7 @@ CC = gcc
 
 # Compiler flags: C11, optimization, warnings, SDL2 includes
 CFLAGS = -g -std=c11 -O2 -Wall -Wextra `sdl2-config --cflags`
-LDFLAGS = `sdl2-config --libs`
+LDFLAGS = `sdl2-config --libs` -lSDL2_ttf
 
 # Build folder
 BUILD_DIR = build
@@ -14,6 +14,7 @@ SRC_RENDERER = src/render/renderer.c
 SRC_WORLD = src/world/world.c
 SRC_MAIN = src/main.c
 SRC_SHARED_COLORS = src/shared/colors.c
+SRC_TEXT_RENDERER = src/render/text_renderer.c
 
 # Object files
 OBJ_ENGINE = $(BUILD_DIR)/engine.o
@@ -21,8 +22,9 @@ OBJ_RENDERER = $(BUILD_DIR)/renderer.o
 OBJ_WORLD = $(BUILD_DIR)/world.o
 OBJ_MAIN = $(BUILD_DIR)/main.o
 OBJ_SHARED_COLORS = $(BUILD_DIR)/colors.o
+OBJ_TEXT_RENDERER = $(BUILD_DIR)/text_renderer.o
 
-OBJ = $(OBJ_ENGINE) $(OBJ_RENDERER) $(OBJ_WORLD) $(OBJ_MAIN) $(OBJ_SHARED_COLORS)
+OBJ = $(OBJ_ENGINE) $(OBJ_RENDERER) $(OBJ_WORLD) $(OBJ_MAIN) $(OBJ_SHARED_COLORS) $(OBJ_TEXT_RENDERER)
 
 # Target binary
 TARGET = $(BUILD_DIR)/granule
@@ -54,6 +56,10 @@ $(OBJ_MAIN): $(SRC_MAIN)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OBJ_SHARED_COLORS): $(SRC_SHARED_COLORS)
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_TEXT_RENDERER): $(SRC_TEXT_RENDERER)
 	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 

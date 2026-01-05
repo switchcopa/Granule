@@ -1,17 +1,22 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_ttf.h>
 #include "renderer.h"
 #include "../world/world.h"
 #include "../../include/shared/colors.h"
+#include "text_renderer.h"
 
 SDL_Window *window;
 SDL_Renderer *renderer;
+TextRenderer tr;
+
+const char *font_path = "../../assets/Pixelify_Sans/PixelifySans.ttf";
 
 static void set_cell_color(World *world, int i, int j);
 
 int renderer_init(void) {
-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	if (SDL_Init(SDL_INIT_VIDEO) != 0 || TTF_Init() == -1)
 		return 0;
 
 	window = SDL_CreateWindow("Granule", SDL_WINDOWPOS_CENTERED, 
@@ -20,6 +25,7 @@ int renderer_init(void) {
 		SDL_WINDOW_SHOWN
 	);
 
+	text_renderer_init(&tr, font_path, FONT_SIZE);
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_ShowCursor(SDL_DISABLE);
         return 1;
@@ -39,6 +45,18 @@ void renderer_draw(World *world) {
 		}
 } 
 
+void renderer_draw_text(World *world, const char *text, int w, int h) {
+	SDL_Texture *tex = text_render(&tr, renderer, text);
+	if (!tex) return;
+
+	int W, H;
+	SDL_QueryTexture(tex, NULL, NULL, &W, &H);
+	SDL_Rect r = {w, h, W, H};
+	
+	SDL_RenderCopy(renderer, tex, NULL, &r);
+	SDL_DestroyTexture(tex);
+}
+
 void renderer_end(void) {
 	SDL_RenderPresent(renderer);
 }
@@ -47,6 +65,7 @@ void renderer_shutdown(void) {
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+	TTF_Quit();
 }
 
 void renderer_draw_cursor(World *world, int mx, int my) {

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int argc, char **argv) {
+int main() {
 	Engine engine;
 	if (!engine_init(&engine)) {
 		fprintf(stderr, "failed to initialize engine\n");

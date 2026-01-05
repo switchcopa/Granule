@@ -18,6 +18,7 @@ typedef struct {
 	CellType entity_summon_type;
 	Mode mode;		
 	int running;
+	int cursor_x, cursor_y;
 } Engine;
 
 int 	engine_init(Engine *engine);

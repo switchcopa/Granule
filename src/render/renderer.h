@@ -15,6 +15,7 @@
 int renderer_init(void);
 void renderer_begin(void);
 void renderer_draw(World *world);
+void renderer_draw_text(World *world, const char *text, int w, int h);
 void renderer_draw_cursor(World *world, int mx, int my);
 void renderer_end(void);
 void renderer_shutdown(void);
