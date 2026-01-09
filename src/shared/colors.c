@@ -13,3 +13,11 @@ const CellColor wet_sand_colors[3] = {
 };
 
 const CellColor water_color = {0, 105, 180};
+
+const CellColor steam_color = {190, 195, 200};
+
+const CellColor stone_colors[3] = {
+	{120, 120, 118}, 
+	{98, 100, 102},
+	{145, 145, 140}
+};

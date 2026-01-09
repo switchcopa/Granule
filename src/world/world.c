@@ -14,13 +14,19 @@ static void wetsand_update(World *world, int i, int j);
 
 static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2);
 
+static void steam_update(World *world, int i, int j);
+
+static void evaporate(World *world, int i, int j);
+
 static void swap_cells(Cell *cell1, Cell *cell2);
 
 static void init_cell(Cell *cell);
 
 static void inc_timer(Cell *cell);
 
-const char *block_names[BLOCKS_N] = {"NONE", "SAND", "WATER", "WET_SAND"};
+static void apply_temperature(World *world, int i, int j);
+
+const char *block_names[BLOCKS_N] = {"NONE", "SAND", "WATER", "WET_SAND", "STEAM", "STONE"};
 
 int world_init(World *world) {
 	world->num_of_objects = 0;
@@ -49,25 +55,26 @@ int world_init(World *world) {
 
 void world_update(World *world) {
 	for (int i = world->height - 1; i >= 0; i--)
-		for (int j = 0; j < world->width; j++)
+		for (int j = 0; j < world->width; j++) {
+			apply_temperature(world, i, j);
+			inc_timer(&world->grid[i][j]);
 			switch (world->grid[i][j].type) {
-				case EMPTY:
-					break;
 				case SAND:
-					inc_timer(&world->grid[i][j]);
 					sand_update(world, i, j);
 					break;
 				case WATER:
-					inc_timer(&world->grid[i][j]);
 					water_update(world, i, j);
 					break;
 				case WET_SAND:
-					inc_timer(&world->grid[i][j]);
 					wetsand_update(world, i, j);
+					break;
+				case STEAM:
+					steam_update(world, i, j);
 					break;
 				default:
 					break;
 			}
+		}
 }
 
 void world_destroy(World *world) {
@@ -91,6 +98,14 @@ static void sand_update(World *world, int i, int j) {
 }
 
 static void water_update(World *world, int i, int j) {
+	if (world->grid[i][j].temperature >= BOILING_TEMP && i > 0 && world->grid[i-1][j].type == EMPTY) {
+		int evaporate_p = rand() % EVAPORATE_PROBABILITY;
+		if (evaporate_p == 1) {
+			evaporate(world, i, j);
+			return;
+		}
+	}
+
 	if (i < world->height - 1 && world->grid[i+1][j].type == EMPTY) {
 		swap_cells(&world->grid[i][j], &world->grid[i+1][j]);
 		return;
@@ -115,6 +130,20 @@ static void water_update(World *world, int i, int j) {
 		sand_water_collide(world, i, j, i+1, j-1);
 }
 
+static void steam_update(World *world, int i, int j) {
+	int decision = rand() % 3;
+	if (i > 0 && world->grid[i - 1][j].type == EMPTY && decision == 0) {
+		swap_cells(&world->grid[i][j], &world->grid[i-1][j]);
+		return;
+	}
+
+	if (j < world->width - 1 && world->grid[i][j+1].type == EMPTY && decision == 1)
+		swap_cells(&world->grid[i][j], &world->grid[i][j+1]);
+
+	if (j > 0 && world->grid[i][j-1].type == EMPTY && decision == 2)
+		swap_cells(&world->grid[i][j], &world->grid[i][j-1]);
+}
+
 static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2) {
 	int choice = rand() % 3;
 	world->grid[i_1][j_1].type = EMPTY;
@@ -123,6 +152,7 @@ static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2)
 	world->grid[i_2][j_2].color = wet_sand_colors[choice];
 	world->grid[i_2][j_2].timer = world->grid[i_1][j_1].timer;
 	world->grid[i_1][j_1].timer = 0U;
+	world->grid[i_2][j_2].temperature = world->grid[i_1][j_1].temperature;
 }
 
 static void wetsand_update(World *world, int i, int j) {
@@ -150,6 +180,14 @@ static void wetsand_update(World *world, int i, int j) {
 	}
 }
 
+static void evaporate(World *world, int i, int j) {
+	Cell *cell = &world->grid[i][j];
+	cell->type = STEAM;
+	cell->color = steam_color;
+	cell->timer = 0U;
+	cell->state = GAS;
+}
+
 static void swap_cells(Cell *cell_1, Cell *cell_2) {
 	CellType type = cell_1->type;
 	cell_1->type = cell_2->type;
@@ -175,11 +213,31 @@ static void swap_cells(Cell *cell_1, Cell *cell_2) {
 static void init_cell(Cell *cell) {
 	cell->type = EMPTY;
 	cell->color = (CellColor) {0, 0, 0};			  
-	cell->temperature = 20.0; 
+	cell->temperature = DEFAULT_TEMP; 
 	cell->timer = 0U;
 	cell->state = NORMAL;
 }
 
 static void inc_timer(Cell *cell) {
 	cell->timer++;
+}
+
+static void apply_temperature(World *world, int i, int j) {
+	if (world->grid[i][j].type == EMPTY || world->grid[i][j].temperature == DEFAULT_TEMP)
+		return;
+
+	for (int x = i - 1; x >= 0 && x < world->height - 1 && x <= i + 1; x++)
+		for (int y = j - 1; y >= 0 && y < world->width - 1 && y <= j + 1; y++) {
+			if (x == i && y == j)
+				continue;
+
+			float temp_spread = (float) world->grid[i][j].temperature / world->grid[x][y].temperature;
+			if (temp_spread < 1.0f) {
+				world->grid[x][y].temperature -= temp_spread;
+				world->grid[i][j].temperature += temp_spread;
+			} else if (temp_spread > 1.0f) {
+				world->grid[x][y].temperature += temp_spread;
+				world->grid[i][j].temperature -= temp_spread;
+			}
+		}
 }

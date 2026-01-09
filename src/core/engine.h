@@ -8,11 +8,13 @@
 #define TARGET_FPS 60
 #define FRAME_TIME (1000 / TARGET_FPS)
 #define DT (1.0f / TARGET_FPS)
-#define MODES_N 2
+#define MODES_N 3
+#define HEATING_SPEED 3
 
 typedef enum {
 	NONE,
 	ERASE,
+        HEAT,
 } Mode;
 
 typedef struct {

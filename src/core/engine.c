@@ -17,11 +17,12 @@ static void 	erase(World *world, int i, int j);
 static void 	clear_cell(Cell *cell);
 static void 	reset(World *world);
 static void 	get_cursor(Engine *engine);
+static void 	heat(World *world, int x, int y);
 
 World world;
 
 extern const char *block_names[];
-const char *modes[MODES_N] = {"NONE", "ERASE"};
+const char *modes[MODES_N] = {"NONE", "ERASE", "HEAT"};
 
 int engine_init(Engine *engine) {
 	engine->running = 0;
@@ -72,12 +73,11 @@ void engine_run(Engine *engine) {
 						world.generation_size -= 1;
 					break;
 				case SDL_KEYDOWN:
-					if (event.key.keysym.sym == SDLK_e)
+				        if (event.key.keysym.sym == SDLK_e)
 						engine->palette = (CellType)(engine->palette + 1) % BLOCKS_N;
-					else if (event.key.keysym.sym == SDLK_d) {
+					if (event.key.keysym.sym == SDLK_s)
                                                 engine->mode = (Mode)(engine->mode + 1) % MODES_N;
-					}
-					else if (event.key.keysym.sym == SDLK_r)
+					if (event.key.keysym.sym == SDLK_r)
 						reset(&world);
 					break;
 			}
@@ -85,10 +85,12 @@ void engine_run(Engine *engine) {
                          
 
 		if (is_holding_mouse) {
-			if (engine->mode == ERASE)
-				erase(&world, engine->cursor_x, engine->cursor_y);
-			else
+			if (engine->mode == NONE)
 				generate_entities(&world, engine->palette, engine->cursor_x, engine->cursor_y);
+			else if (engine->mode == ERASE)
+				erase(&world, engine->cursor_x, engine->cursor_y);
+			else if (engine->mode == HEAT)
+				heat(&world, engine->cursor_x, engine->cursor_y);	
 		}
 
 		world_update(&world);
@@ -112,9 +114,9 @@ void engine_run(Engine *engine) {
                         snprintf(type_text, sizeof(type_text), "Cell Type: %s", block_names[engine->hovered_cell->type]);
                         snprintf(timer_text, sizeof(timer_text), "Ticks: %u", engine->hovered_cell->timer); 
                         
-                        renderer_draw_text(temperature_text, WINDOW_WIDTH - 300, WINDOW_HEIGHT - 200);
-                        renderer_draw_text(type_text       , WINDOW_WIDTH - 300, WINDOW_HEIGHT - 175);
-                        renderer_draw_text(timer_text      , WINDOW_WIDTH - 300, WINDOW_HEIGHT - 150);
+                        renderer_draw_text(temperature_text, WINDOW_WIDTH - 350, WINDOW_HEIGHT - 200);
+                        renderer_draw_text(type_text       , WINDOW_WIDTH - 350, WINDOW_HEIGHT - 175);
+                        renderer_draw_text(timer_text      , WINDOW_WIDTH - 350, WINDOW_HEIGHT - 150);
                 }
 
 		renderer_draw_cursor(&world, engine->cursor_x, engine->cursor_y);
@@ -157,6 +159,15 @@ static void summon_entity(World *world, CellType entity_type, int i, int j) {
 		case WET_SAND:
 			clr = (CellColor *) wet_sand_colors;
 			break;
+		case STEAM:
+			world->grid[i][j].color = steam_color;
+			world->grid[i][j].type = entity_type;
+			world->grid[i][j].temperature = BOILING_TEMP;
+			world->grid[i][j].state = GAS;
+			return;
+		case STONE:
+			clr = (CellColor *) stone_colors;
+			break;
                 default:
                         return;
 	}
@@ -186,7 +197,7 @@ static void clear_cell(Cell *cell) {
 	cell->type = EMPTY;
 	cell->color = (CellColor) {0, 0, 0};
 	cell->state = NORMAL;
-	cell->temperature = 20.0f;
+	cell->temperature = DEFAULT_TEMP;
 	cell->timer = 0U;
 }
 
@@ -194,4 +205,14 @@ static void get_cursor(Engine *engine) {
 	int mx, my;
 	SDL_GetMouseState(&mx, &my);
 	engine->cursor_x = mx, engine->cursor_y = my;
+}
+
+static void heat(World *world, int x, int y) {
+	int grid_x = x / BLOCK_SIZE;	
+	int grid_y = y / BLOCK_SIZE;
+
+	for (int i = grid_y; i < grid_y + world->generation_size && i < world->height; i++)
+		for (int j = grid_x; j < grid_x + world->generation_size && j < world->width; j++)
+			if (i >= 0 && j >= 0 && world->grid[i][j].type != EMPTY)
+				world->grid[i][j].temperature += (float) world->generation_size / HEATING_SPEED;
 }

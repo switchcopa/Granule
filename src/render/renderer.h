@@ -5,7 +5,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#define BLOCK_SIZE 8
+#define BLOCK_SIZE 4
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720

@@ -78,10 +78,12 @@ void renderer_draw_cursor(World *world, int mx, int my) {
 	SDL_RenderDrawRect(renderer, &cursor);
 }
 
-static void set_cell_color(World *world, int i, int j) { 
-        uint8_t r = world->grid[i][j].color.r;
-        uint8_t g = world->grid[i][j].color.g;
-        uint8_t b = world->grid[i][j].color.b;
+static void set_cell_color(World *world, int i, int j) {
+	Cell cell = world->grid[i][j];
+        uint8_t r = cell.color.r;
+        uint8_t g = cell.color.g;
+        uint8_t b = cell.color.b;
+	uint8_t a = (cell.state == GAS) ? 70 : 255;
 
-        SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
 }

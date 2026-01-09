@@ -6,21 +6,26 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#define CELL_SIZE 4
 #define MAX_GENERATION_SIZE 20
-#define BLOCKS_N 4
+#define BLOCKS_N 6
+#define DEFAULT_TEMP 20.0f
+#define BOILING_TEMP 100.0f
+#define EVAPORATE_PROBABILITY 20
 
 typedef enum {
 	NORMAL,
 	BURNING,
-	FREEZING
+	FREEZING,
+	GAS
 } CellState;
 
 typedef enum {
 	EMPTY,
 	SAND,
 	WATER,
-	WET_SAND
+	WET_SAND,
+	STEAM,
+	STONE
 } CellType;
 
 typedef struct {
