@@ -7,8 +7,8 @@
 
 #define BLOCK_SIZE 4
 
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
+#define WINDOW_WIDTH 1600 
+#define WINDOW_HEIGHT 900 
 #define TARGET_FPS 60
 #define FRAME_TIME (1000 / TARGET_FPS)
 

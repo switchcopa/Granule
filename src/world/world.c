@@ -131,17 +131,23 @@ static void water_update(World *world, int i, int j) {
 }
 
 static void steam_update(World *world, int i, int j) {
-	int decision = rand() % 3;
-	if (i > 0 && world->grid[i - 1][j].type == EMPTY && decision == 0) {
-		swap_cells(&world->grid[i][j], &world->grid[i-1][j]);
-		return;
-	}
+        if (i > 0 && world->grid[i - 1][j].type == EMPTY) {
+                swap_cells(&world->grid[i][j], &world->grid[i - 1][j]);
+                return;
+        }
 
-	if (j < world->width - 1 && world->grid[i][j+1].type == EMPTY && decision == 1)
-		swap_cells(&world->grid[i][j], &world->grid[i][j+1]);
+        int dir = (rand() & 1) ? -1 : 1;
 
-	if (j > 0 && world->grid[i][j-1].type == EMPTY && decision == 2)
-		swap_cells(&world->grid[i][j], &world->grid[i][j-1]);
+        if (i > 0 && j + dir >= 0 && j + dir < world->width &&
+                world->grid[i - 1][j + dir].type == EMPTY) {
+                swap_cells(&world->grid[i][j], &world->grid[i - 1][j + dir]);
+                return;
+        }
+
+        if (j + dir >= 0 && j + dir < world->width &&
+                world->grid[i][j + dir].type == EMPTY) {
+                swap_cells(&world->grid[i][j], &world->grid[i][j + dir]);
+        }
 }
 
 static void sand_water_collide(World *world, int i_1, int j_1, int i_2, int j_2) {
@@ -223,21 +229,39 @@ static void inc_timer(Cell *cell) {
 }
 
 static void apply_temperature(World *world, int i, int j) {
-	if (world->grid[i][j].type == EMPTY || world->grid[i][j].temperature == DEFAULT_TEMP)
-		return;
+        Cell *c = &world->grid[i][j];
+        if (c->type == EMPTY)
+                return;
 
-	for (int x = i - 1; x >= 0 && x < world->height - 1 && x <= i + 1; x++)
-		for (int y = j - 1; y >= 0 && y < world->width - 1 && y <= j + 1; y++) {
-			if (x == i && y == j)
-				continue;
+        float t = c->temperature;
+        float delta_sum = 0.0f;
 
-			float temp_spread = (float) world->grid[i][j].temperature / world->grid[x][y].temperature;
-			if (temp_spread < 1.0f) {
-				world->grid[x][y].temperature -= temp_spread;
-				world->grid[i][j].temperature += temp_spread;
-			} else if (temp_spread > 1.0f) {
-				world->grid[x][y].temperature += temp_spread;
-				world->grid[i][j].temperature -= temp_spread;
-			}
-		}
+        for (int di = -1; di <= 1; di++) {
+                for (int dj = -1; dj <= 1; dj++) {
+                        if (di == 0 && dj == 0)
+                                continue;
+
+                        int ni = i + di;
+                        int nj = j + dj;
+
+                        if (ni < 0 || ni >= world->height ||
+                                nj < 0 || nj >= world->width)
+                                continue;
+
+                        Cell *n = &world->grid[ni][nj];
+                        if (n->type == EMPTY)
+                                continue;
+
+                            
+                        float diff = t - n->temperature;
+                        if (fabsf(diff) < MIN_TEMP_DELTA)
+                                continue;
+
+                        float transfer = diff * TEMP_DIFFUSION;
+                        n->temperature += transfer;
+                        delta_sum -= transfer;
+                }
+            }
+
+        c->temperature += delta_sum;
 }
