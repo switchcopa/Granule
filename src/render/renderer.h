@@ -6,6 +6,7 @@
 #define RENDERER_H
 
 #define BLOCK_SIZE 4
+#define GAS_ALPHA 50
 
 #define WINDOW_WIDTH 1600 
 #define WINDOW_HEIGHT 900 

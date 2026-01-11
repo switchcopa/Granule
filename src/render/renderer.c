@@ -2,6 +2,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
+#include <stdint.h>
 #include "renderer.h"
 #include "../world/world.h"
 #include "../../include/shared/colors.h"
@@ -14,6 +15,7 @@ TextRenderer tr;
 const char *font_path = "assets/Pixelify_Sans/Pixelify_Sans.ttf";
 
 static void set_cell_color(World *world, int i, int j);
+static void render_gas(World *world, int i, int j);
 
 int renderer_init(void) {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0 || TTF_Init() == -1)
@@ -32,7 +34,9 @@ int renderer_init(void) {
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_ShowCursor(SDL_DISABLE);
-        return 1;
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    return 1;
 }
 
 void renderer_begin(void) {
@@ -43,11 +47,16 @@ void renderer_begin(void) {
 void renderer_draw(World *world) {
 	for (int i = 0; i < world->height; i++)
 		for (int j = 0; j < world->width; j++) {
+                        if (world->grid[i][j].state == GAS) {
+                            render_gas(world, i, j);
+                            continue;
+                        }
+
                         set_cell_color(world, i, j);
                         SDL_Rect block = {j*BLOCK_SIZE, i*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
                         SDL_RenderFillRect(renderer, &block);
 		}
-} 
+}
 
 void renderer_draw_text(const char *text, int w, int h) {
 	SDL_Texture *tex = text_render(&tr, renderer, text);
@@ -80,10 +89,36 @@ void renderer_draw_cursor(World *world, int mx, int my) {
 
 static void set_cell_color(World *world, int i, int j) {
 	Cell cell = world->grid[i][j];
-        uint8_t r = cell.color.r;
-        uint8_t g = cell.color.g;
-        uint8_t b = cell.color.b;
-	uint8_t a = (cell.state == GAS) ? 70 : 255;
+    uint8_t r = cell.color.r;
+    uint8_t g = cell.color.g;
+    uint8_t b = cell.color.b;
 
-        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+}
+
+static void render_gas(World *world, int i, int j) {
+    const CellColor *clr;
+    switch (world->grid[i][j].type) {
+        case STEAM:
+            clr = steam_color;
+            break;
+        default:
+            return;
+    }
+
+    SDL_Rect rects[] = {
+        {i*BLOCK_SIZE, (j-1)*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE},
+        {(i-1)*BLOCK_SIZE, j*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE},
+        {i*BLOCK_SIZE, (j+1)*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE},
+        {(i+1)*BLOCK_SIZE, j*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE},
+        {i * BLOCK_SIZE, j * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE}
+    };
+
+    for (int k = 0; k < 4; k++) {
+        SDL_SetRenderDrawColor(renderer, clr[0].r, clr[0].g, clr[0].b, GAS_ALPHA);
+        SDL_RenderFillRect(renderer, &rects[k]);
+    }
+
+    SDL_SetRenderDrawColor(renderer, clr[1].r, clr[1].g, clr[1].b, GAS_ALPHA);
+    SDL_RenderFillRect(renderer, &rects[4]);
 }

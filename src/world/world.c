@@ -131,7 +131,8 @@ static void water_update(World *world, int i, int j) {
 }
 
 static void steam_update(World *world, int i, int j) {
-        if (i > 0 && world->grid[i - 1][j].type == EMPTY) {
+        int nrand = rand() % 10;
+        if (i > 0 && world->grid[i - 1][j].type == EMPTY && nrand == 0) {
                 swap_cells(&world->grid[i][j], &world->grid[i - 1][j]);
                 return;
         }
@@ -189,7 +190,6 @@ static void wetsand_update(World *world, int i, int j) {
 static void evaporate(World *world, int i, int j) {
 	Cell *cell = &world->grid[i][j];
 	cell->type = STEAM;
-	cell->color = steam_color;
 	cell->timer = 0U;
 	cell->state = GAS;
 }
@@ -218,7 +218,7 @@ static void swap_cells(Cell *cell_1, Cell *cell_2) {
 
 static void init_cell(Cell *cell) {
 	cell->type = EMPTY;
-	cell->color = (CellColor) {0, 0, 0};			  
+	cell->color = (CellColor) {0, 0, 0};
 	cell->temperature = DEFAULT_TEMP; 
 	cell->timer = 0U;
 	cell->state = NORMAL;

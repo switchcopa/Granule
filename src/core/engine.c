@@ -147,7 +147,7 @@ static void generate_entities(World *world, CellType entity_type, int x, int y) 
 }
 
 static void summon_entity(World *world, CellType entity_type, int i, int j) {
-	CellColor *clr;
+	const CellColor *clr;
 	switch (entity_type) {
 		case SAND:
 			clr = (CellColor *) sand_colors;
@@ -160,7 +160,6 @@ static void summon_entity(World *world, CellType entity_type, int i, int j) {
 			clr = (CellColor *) wet_sand_colors;
 			break;
 		case STEAM:
-			world->grid[i][j].color = steam_color;
 			world->grid[i][j].type = entity_type;
 			world->grid[i][j].temperature = BOILING_TEMP;
 			world->grid[i][j].state = GAS;
